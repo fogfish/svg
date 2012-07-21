@@ -1,0 +1,102 @@
+﻿Erlang SVG library
+******************
+
+Copyright (c) 2012, Dmitry Kolesnikov
+
+
+   This library is free software; you can redistribute it and/or modify
+it under the terms of the Apache License, version 2.0 as published by 
+http://www.apache.org/licenses/LICENSE-2.0
+
+Introduction
+============
+
+   The library provides interface to render SVG graphics from Erlang 
+application. The current version targets server-side rendering use-cases
+with help of ImageMagic command line tool 'convert'. The library internal
+uses xmerl for XML output.
+
+Compile and build
+=================
+ 
+   git clone https://github.com/fogfish/svg.git
+   cd svg
+   make
+
+Supported features
+==================
+
+   The following features are supported by current library release
+See SVG specification http://www.w3.org/TR/SVG/ for detailed 
+features descriptions.
+
+   * SVG version 1.1
+   * styling using presentation attributes
+      - font properties
+      - text properties
+      - other visual properties
+   * grouping element 'g'
+   * 'path' element
+      - absolute line-to primitive
+      - absolute Bezier curve primitive
+      - closepath primitive
+   * 'rect' element
+   * 'circle' element
+   * 'ellipse' element
+   * 'text' element
+      - font styling
+      - basic text draw at defined point
+
+Feature backlog
+===============
+
+   The following features to be supported in following releases
+
+   * 'defs' element 
+   * 'symbol' element
+   * 'use' element  
+   * styling
+      - gradient, patterns
+      - 'style' element (css styling)
+   * 'path' element
+      - quadratic Bezier curve
+      - elliptical arc
+   * 'line' element
+   * 'polyline' element
+   * 'text' element
+      - list of coordinates to 'x', 'y' attributes
+      - inner 'tspan' element
+      - shift the current text position {dx, dy}
+      - layout feature
+      - 'textPath' element
+   * 'image' element
+   * common attributes: 'id', 'class'
+   * coordinate system, transform
+   * clipping, masking, filtering
+   * 'color-profile' element
+
+Not supported features
+======================
+
+   The following features is nice-to-have but they are not required
+for server side rending use-cases.
+
+   * xsl styling
+   * svg metadata: 'desc', 'title'
+   * 'switch' element (conditional processing)
+   * 'path' element
+      - horizontal line-to primitive
+      - vertical line-to primitive
+   * text
+      - 'altGlyph', 'altGlyphDef', 'altGlyphItem', 'glyphRef' elements
+   * 'cursor' element
+   * animation
+
+Interface and examples
+======================
+
+   See src/svg.erl for api specification
+   See test/svg_test.erl for api example
+
+
+ 
