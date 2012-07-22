@@ -16,6 +16,7 @@
 %%   @description
 %%      erlang SVG library   
 -module(svg).
+-author('Dmitry Kolesnikov <dmkolesnikov@gmail.com>').
 
 %% primitives
 -export([init/2, set/3, add/2, export/1, write/2]).
@@ -30,7 +31,6 @@
 -define(DOCTYPE, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
 	\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n").
 -define(VSN, "1.1").
--define(I2L(X), integer_to_list(X)).
 
 %%
 %%
@@ -150,7 +150,7 @@ g(Attr) ->
 -spec rect(point(), size()) -> element().
 
 rect({X,Y}, {W,H}) ->
-   {rect, [{x, X}, {y, Y}, {width, W}, {height, H}], []}.   
+   {rect, [{x, coord(X)}, {y, coord(Y)}, {width, coord(W)}, {height, coord(H)}], []}.   
 
 %%
 %% circle(Point, R) -> Element
@@ -159,7 +159,7 @@ rect({X,Y}, {W,H}) ->
 -spec circle(point(), integer()) -> element().
 
 circle({X,Y}, R) ->
-   {circle, [{cx, X}, {cy, Y}, {r, R}], []}.
+   {circle, [{cx, coord(X)}, {cy, coord(Y)}, {r, coord(R)}], []}.
 
 %%
 %% ellipse(Point, {Rx, Ry}) -> Element
@@ -168,7 +168,7 @@ circle({X,Y}, R) ->
 -spec ellipse(point(), {integer(), integer()}) -> element().
 
 ellipse({X,Y}, {Rx, Ry}) ->
-   {ellipse, [{cx, X}, {cy, Y}, {rx, Rx}, {ry, Ry}], []}.
+   {ellipse, [{cx, coord(X)}, {cy, coord(Y)}, {rx, coord(Rx)}, {ry, coord(Ry)}], []}.
 
 %%
 %% path(Path) -> element()
@@ -179,7 +179,7 @@ ellipse({X,Y}, {Rx, Ry}) ->
 
 path([{X0, Y0} | Tail]) ->
    Ptail = lists:map(fun p4p/1, Tail),
-   Path  = [ [$M, 32, ?I2L(X0), 32, ?I2L(Y0)] | Ptail ],
+   Path  = [ [$M, 32, coord(X0), 32, coord(Y0)] | Ptail ],
    {path, [{d, lists:flatten(Path)}], []}.
 
 %%
@@ -188,7 +188,7 @@ path([{X0, Y0} | Tail]) ->
 %% defines a text
 -spec text(point(), list()) -> element().
 text({X,Y}, Text) ->
-   {text, [{x, X}, {y, Y}], [Text]}.
+   {text, [{x, coord(X)}, {y, coord(Y)}], [Text]}.
 
 
 
@@ -202,17 +202,24 @@ text({X,Y}, Text) ->
 %% point for path
 p4p({{Cx1, Cy1}, {Cx2, Cy2}, {X, Y}}) ->
    % absolute curve-to
-   [32, $C, 32, ?I2L(Cx1), 32, ?I2L(Cy1), 32, ?I2L(Cx2), 32, ?I2L(Cy2), 32, ?I2L(X), 32, ?I2L(Y)];
+   [32, $C, 32, coord(Cx1), 32, coord(Cy1), 32, coord(Cx2), 32, coord(Cy2), 32, coord(X), 32, coord(Y)];
 p4p({{Cx2, Cy2}, {X, Y}}) ->
    % absolute curve-to (first control point is second)
-   [32, $S, 32, ?I2L(Cx2), 32, ?I2L(Cy2), 32, ?I2L(X), 32, ?I2L(Y)];
+   [32, $S, 32, coord(Cx2), 32, coord(Cy2), 32, coord(X), 32, coord(Y)];
 p4p({X, Y}) ->
    % absolute line-to
-   [32, $L, 32, ?I2L(X), 32, ?I2L(Y)];
+   [32, $L, 32, coord(X), 32, coord(Y)];
 p4p('Z') ->
    % close path
    $Z.
 
+
+%%
+%% numerical coordinate value to list
+coord(X) when is_integer(X) ->
+   integer_to_list(X);
+coord(X) when is_float(X) ->
+   io_lib:format("~.1f", [X]).
 
 
 
