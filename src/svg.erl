@@ -100,7 +100,7 @@ add(E, {Tag, Attrs, Inner}) when is_list(E) ->
 
 export({svg, Attr, Svg}) ->
    xmerl:export_simple(
-      [{svg, Attr, lists:reverse(Svg)}], 
+      [{svg, Attr, Svg}], 
       xmerl_xml, 
       [{prolog, ?XML ++ ?DOCTYPE}]
    ).
