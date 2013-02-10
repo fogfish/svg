@@ -21,7 +21,7 @@ rect_test() ->
    ok = svg:write("rect.svg",
       svg:add(
    	   svg:add(
-   	      svg:rect({50,50}, {100,100}),
+   	      svg:rect({{50,50}, {100,100}}),
    	      svg:g([
    	      	{fill,   '#666'}, 
    	      	{stroke, '#333'},
@@ -37,7 +37,7 @@ circle_test() ->
    ok = svg:write("circle.svg",
       svg:add(
    	   svg:add(
-   	      svg:circle({100,100}, 50),
+   	      svg:circle({{100,100}, 50}),
    	      svg:g([
    	      	{fill,   '#666'}, 
    	      	{stroke, '#333'},
@@ -128,4 +128,3 @@ text_test() ->
          svg:init(200, 200)
       )
    ).
-

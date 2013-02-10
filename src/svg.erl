@@ -20,17 +20,25 @@
 
 %% primitives
 -export([init/2, set/3, add/2, export/1, write/2]).
+%% meta data
+-export([defs/0]).
 %% containers
--export([g/1]).
+-export([g/0, g/1]).
 %% shapes
--export([rect/2, circle/2, ellipse/2, path/1, text/2]).
+-export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2]).
+%% clipping
+-export([clip_path/1, clip_path/2]).
+%% transform
+-export([transform/2, translate/2, scale/1]).
+
 
 %%
 %%
 -define(XML, "<?xml version=\"1.0\" standalone=\"no\"?>\n").
 -define(DOCTYPE, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"
 	\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n").
--define(VSN, "1.1").
+-define(VSN,   "1.1").
+-define(SVG, "http://www.w3.org/2000/svg").
 
 %%
 %%
@@ -56,7 +64,7 @@
 -spec init(integer(), integer()) -> element().
 
 init(Width, Height) ->
-   {svg, [{version, ?VSN}, {width, Width}, {height, Height}], []}.
+   {svg, [{xmlns, ?SVG}, {version, ?VSN}, {width, Width}, {height, Height}], []}.
 
 
 %%
@@ -123,6 +131,21 @@ write(Filename, Svg) ->
 
 %%%------------------------------------------------------------------
 %%%
+%%% control
+%%%
+%%%------------------------------------------------------------------
+
+%%
+%% defs() -> Element
+%%
+%% 
+-spec defs() -> element().
+
+defs() ->
+   {defs, [], []}.
+
+%%%------------------------------------------------------------------
+%%%
 %%% container
 %%%
 %%%------------------------------------------------------------------
@@ -134,8 +157,15 @@ write(Filename, Svg) ->
 %% create grouping element
 -spec g(attributes()) -> element().
 
+g() ->
+   g([]).
+
 g(Attr) ->
    {g, Attr, []}.
+
+%view({X,Y}, {W,H}) ->
+%   {view, [{'viewBox', [coord(X), $ , coord(Y), $ , coord(W), $ , coord(H)]}], []}.   
+
 
 %%%------------------------------------------------------------------
 %%%
@@ -149,8 +179,11 @@ g(Attr) ->
 %% defines rectangle base of top-left corner poins and width, height
 -spec rect(point(), size()) -> element().
 
-rect({X,Y}, {W,H}) ->
-   {rect, [{x, coord(X)}, {y, coord(Y)}, {width, coord(W)}, {height, coord(H)}], []}.   
+rect(Rect) ->
+   rect(Rect, []).   
+
+rect({{X,Y}, {W,H}}, Attr) ->
+   {rect, [{x, coord(X)}, {y, coord(Y)}, {width, coord(W)}, {height, coord(H)} | Attr], []}.   
 
 %%
 %% circle(Point, R) -> Element
@@ -158,8 +191,11 @@ rect({X,Y}, {W,H}) ->
 %% defines a circle based on center point and radius
 -spec circle(point(), integer()) -> element().
 
-circle({X,Y}, R) ->
-   {circle, [{cx, coord(X)}, {cy, coord(Y)}, {r, coord(R)}], []}.
+circle(Circle) ->
+   circle(Circle, []).
+
+circle({{X,Y}, R}, Attr) ->
+   {circle, [{cx, coord(X)}, {cy, coord(Y)}, {r, coord(R)} | Attr], []}.
 
 %%
 %% ellipse(Point, {Rx, Ry}) -> Element
@@ -177,19 +213,78 @@ ellipse({X,Y}, {Rx, Ry}) ->
 %% defines a path
 -spec path([point() | curve()]) -> element().
 
-path([{X0, Y0} | Tail]) ->
+%%
+%%
+path(Path) ->
+   path(Path, []).
+
+path([{X0, Y0} | Tail], Attr) ->
    Ptail = lists:map(fun p4p/1, Tail),
    Path  = [ [$M, 32, coord(X0), 32, coord(Y0)] | Ptail ],
-   {path, [{d, lists:flatten(Path)}], []}.
+   {path, [{d, lists:flatten(Path)} | Attr], []}.
 
 %%
 %% text(Point, Text) -> Element
 %%
 %% defines a text
--spec text(point(), list()) -> element().
-text({X,Y}, Text) ->
-   {text, [{x, coord(X)}, {y, coord(Y)}], [Text]}.
+text(Point, Text) ->
+   text(Point, Text, []).
 
+-spec text(point(), list()) -> element().
+text({X,Y}, Text, Attr) ->
+   {text, [{x, coord(X)}, {y, coord(Y)} | Attr], [Text]}.
+
+span(Text) ->
+   span(Text, []).
+
+span(Text, Attr) ->
+   {tspan, Attr, [Text]}.
+
+%%%------------------------------------------------------------------
+%%%
+%%% clipping
+%%%
+%%%------------------------------------------------------------------
+
+%%
+%%
+-spec clip_path(atom() | list()) -> element().
+
+clip_path(Id) ->
+   clip_path(Id, []).
+
+-spec clip_path(atom() | list(), attributes()) -> element().
+
+clip_path(Id, Attr) ->
+   {'clipPath', [{id, Id} | Attr], []}.
+
+%%%------------------------------------------------------------------
+%%%
+%%% transform
+%%%
+%%%------------------------------------------------------------------
+
+
+%%
+%% transform path to bounding box
+transform(Path, {{X,Y},{W,H}}) ->
+   {{Xmin, Xmax}, {Ymin, Ymax}} = minmax(Path),
+   Xscale = (Xmax - Xmin) / W,
+   Yscale = (Ymax - Ymin) / H,
+   lists:map(
+      fun({Xp, Yp}) ->
+         {X + (Xp - Xmin) / Xscale, H + Y - (Yp - Ymin) / Yscale}
+      end,
+      Path
+   ).
+
+%%
+%%
+translate(X, Y) ->
+   [" translate", $(, coord(X), 32, coord(Y), $), $ ].
+
+scale(X) ->
+   [" scale", $(, coord(X), $), $ ].
 
 
 %%%------------------------------------------------------------------
@@ -199,7 +294,7 @@ text({X,Y}, Text) ->
 %%%------------------------------------------------------------------
 
 %%
-%% point for path
+%% point for path - convert coordinate 
 p4p({{Cx1, Cy1}, {Cx2, Cy2}, {X, Y}}) ->
    % absolute curve-to
    [32, $C, 32, coord(Cx1), 32, coord(Cy1), 32, coord(Cx2), 32, coord(Cy2), 32, coord(X), 32, coord(Y)];
@@ -221,7 +316,16 @@ coord(X) when is_integer(X) ->
 coord(X) when is_float(X) ->
    io_lib:format("~.1f", [X]).
 
-
-
-
+%%
+%% 
+minmax([{X0, Y0} | _] = Path) ->
+   X = {X0, erlang:element(1, lists:last(Path))},
+   Y = lists:foldl(
+      fun({_, Y}, {Min0, Max0}) ->
+         {erlang:min(Min0, Y), erlang:max(Max0, Y)}
+      end,
+      {Y0, Y0},
+      Path
+   ),
+   {X, Y}.
 
