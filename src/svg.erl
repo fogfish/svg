@@ -269,14 +269,22 @@ clip_path(Id, Attr) ->
 %% transform path to bounding box
 transform(Path, {{X,Y},{W,H}}) ->
    {{Xmin, Xmax}, {Ymin, Ymax}} = minmax(Path),
-   Xscale = (Xmax - Xmin) / W,
-   Yscale = (Ymax - Ymin) / H,
+   Xscale = case (Xmax - Xmin) / W of
+      0.0 -> Xmax / W;
+      XS  -> XS
+   end,
+   Yscale = case (Ymax - Ymin) / H of
+      0.0 -> Ymax / W;
+      YS  -> YS
+   end,
    lists:map(
       fun({Xp, Yp}) ->
          {X + (Xp - Xmin) / Xscale, H + Y - (Yp - Ymin) / Yscale}
       end,
       Path
    ).
+
+
 
 %%
 %%
