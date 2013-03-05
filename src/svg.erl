@@ -64,7 +64,13 @@
 -spec init(integer(), integer()) -> element().
 
 init(Width, Height) ->
-   {svg, [{xmlns, ?SVG}, {version, ?VSN}, {width, Width}, {height, Height}], []}.
+   {svg, [
+      {xmlns,   ?SVG}, 
+      {version, ?VSN}, 
+      {width,   Width}, 
+      {height,  Height},
+      {viewBox, lists:flatten(io_lib:format("0 0 ~b ~b", [Width, Height]))}
+   ], []}.
 
 
 %%
