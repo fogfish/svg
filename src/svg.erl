@@ -19,7 +19,7 @@
 -author('Dmitry Kolesnikov <dmkolesnikov@gmail.com>').
 
 %% primitives
--export([init/2, set/3, add/2, export/1, write/2]).
+-export([init/2, set/2, set/3, get/3, add/2, export/1, write/2]).
 %% meta data
 -export([defs/0]).
 %% containers
@@ -29,8 +29,7 @@
 %% clipping
 -export([clip_path/1, clip_path/2]).
 %% transform
--export([transform/2, translate/2, scale/1]).
-
+-export([transform/2, transform/3, translate/2, scale/2]).
 
 %%
 %%
@@ -81,9 +80,11 @@ init(Width, Height) ->
 %%
 %% set attribute of element
 -spec set(atom(), atom() | list(), element()) -> element().
+-spec(set/2 :: (attributes(), element()) -> element()).
 
-set(Attr, Val, {Tag, Attrs, Inner}) ->
-   {Tag, set(Attr, Val, Attrs), Inner}; 
+set(Attr, Val, {Tag, Attrs, Inner})
+ when is_atom(Attr) ->
+   {Tag, set(Attr, Val, Attrs), Inner};
 
 set(Attr, Val, List) when is_list(List) ->
    case lists:keytake(Attr, 1, List) of
@@ -91,19 +92,44 @@ set(Attr, Val, List) when is_list(List) ->
       {value, _, A} -> [{Attr, Val} | A]
    end.
 
+set(Attrs, E)
+ when is_list(Attrs) ->
+   lists:foldl(fun({X, Y}, Acc) -> set(X, Y, Acc) end, E, Attrs).
+
+
 
 %%
-%% add(Inner, Element0) -> Element
+%% get(Attr, Default, Element) -> Value
+%%
+%% get attribute of element
+-spec(get/3 :: (atom(), any(), element()) -> any()).
+
+get(Attr, Default, {_Tag, Attrs, _Inner}) ->
+   case lists:keyfind(Attr, 1, Attrs) of
+      false      -> Default;
+      {_, Value} -> Value
+   end.
+
+%%
+%% add(Inner, Element) -> Element
 %%    Inner   = element() | [element()] 
 %%    Element = element()
 %%
 %% add inner element(s) to container
 -spec add(element(), element()) -> element().
 
-add(E, {Tag, Attrs, Inner}) when is_tuple(E) ->
-   {Tag, Attrs, Inner ++ [E]};
-add(E, {Tag, Attrs, Inner}) when is_list(E) ->
-   {Tag, Attrs, Inner ++ E}.
+add(E, Inner)
+ when is_tuple(E) ->
+   add([E], Inner);
+
+add(E, {Tag, Attrs, Inner}=C)
+ when is_list(E) ->
+   case lists:keyfind(layout, 1, Attrs) of
+      false       -> 
+         {Tag, Attrs, Inner ++ E};
+      {_, Layout} ->
+         svg_layout:add(Layout, E, C)
+   end.
 
 %%
 %% export(Svg) -> IOList
@@ -169,6 +195,7 @@ g() ->
 g(Attr) ->
    {g, Attr, []}.
 
+
 %view({X,Y}, {W,H}) ->
 %   {view, [{'viewBox', [coord(X), $ , coord(Y), $ , coord(W), $ , coord(H)]}], []}.   
 
@@ -189,7 +216,9 @@ rect(Rect) ->
    rect(Rect, []).   
 
 rect({{X,Y}, {W,H}}, Attr) ->
-   {rect, [{x, coord(X)}, {y, coord(Y)}, {width, coord(W)}, {height, coord(H)} | Attr], []}.   
+   {rect, [{x, coord(X)}, {y, coord(Y)}, {width, coord(W)}, {height, coord(H)} | Attr], []};  
+rect({W,H}, Attr) ->
+   {rect, [{width, W}, {height, H} | Attr], []}.
 
 %%
 %% circle(Point, R) -> Element
@@ -272,9 +301,11 @@ clip_path(Id, Attr) ->
 
 
 %%
-%% transform path to bounding box
-transform(Path, {{X,Y},{W,H}}) ->
-   {{Xmin, Xmax}, {Ymin, Ymax}} = minmax(Path),
+%% fit path to bounding box
+transform(Path, Box) ->
+   transform(Path, minmax(Path), Box). 
+   
+transform(Path, {{Xmin, Xmax}, {Ymin, Ymax}}, {{X,Y},{W,H}}) ->
    Xscale = case (Xmax - Xmin) / W of
       0.0 -> Xmax / W;
       XS  -> XS
@@ -294,11 +325,13 @@ transform(Path, {{X,Y},{W,H}}) ->
 
 %%
 %%
-translate(X, Y) ->
-   [" translate", $(, coord(X), 32, coord(Y), $), $ ].
+translate({X, Y}, {E, Attr, Inner}) ->
+   T = lists:flatten(["translate", $(, coord(X), 32, coord(Y), $), $ ]),
+   {E, [{transform, T} | Attr], Inner}.
 
-scale(X) ->
-   [" scale", $(, coord(X), $), $ ].
+scale(X, {E, Attr, Inner}) ->
+   T = lists:flatten(["scale", $(, coord(X), $), $ ]),
+   {E, [{transform, T} | Attr], Inner}.
 
 
 %%%------------------------------------------------------------------

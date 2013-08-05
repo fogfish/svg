@@ -128,3 +128,42 @@ text_test() ->
          svg:init(200, 200)
       )
    ).
+
+horizontal_layout_test() ->
+   ok = svg:write("horizontal.svg",
+      svg:add(
+         svg:add(
+            [
+               svg:rect({100,200}, [{fill, '#333'}]),
+               svg:rect({100,200}, [{fill, '#666'}]),
+               svg:rect({100,200}, [{fill, '#999'}])
+            ],
+            svg:layout(horizontal, [
+               {stroke, '#eee'},
+               {'stroke-width', 1}
+            ])
+         ),
+         svg:init(300, 200)
+      )
+   ).
+
+vertical_layout_test() ->
+   ok = svg:write("vertical.svg",
+      svg:add(
+         svg:add(
+            [
+               svg:rect({200,100}, [{fill, '#333'}]),
+               svg:rect({200,100}, [{fill, '#666'}]),
+               svg:rect({200,100}, [{fill, '#999'}])
+            ],
+            svg:layout(vertical, [
+               {stroke, '#eee'},
+               {'stroke-width', 1}
+            ])
+         ),
+         svg:init(200, 300)
+      )
+   ).
+
+
+
