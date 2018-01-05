@@ -80,7 +80,7 @@ init(Width, Height) ->
 %%
 %% set attribute of element
 -spec set(atom(), atom() | list(), element()) -> element().
--spec(set/2 :: (attributes(), element()) -> element()).
+-spec set(attributes(), element()) -> element().
 
 set(Attr, Val, {Tag, Attrs, Inner})
  when is_atom(Attr) ->
@@ -102,7 +102,7 @@ set(Attrs, E)
 %% get(Attr, Default, Element) -> Value
 %%
 %% get attribute of element
--spec(get/3 :: (atom(), any(), element()) -> any()).
+-spec get(atom(), any(), element()) -> any().
 
 get(Attr, Default, {_Tag, Attrs, _Inner}) ->
    case lists:keyfind(Attr, 1, Attrs) of
