@@ -25,7 +25,7 @@
 %% containers
 -export([g/0, g/1]).
 %% shapes
--export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2]).
+-export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2, line/2]).
 %% clipping
 -export([clip_path/1, clip_path/2]).
 %% transform
@@ -257,6 +257,16 @@ path([{X0, Y0} | Tail], Attr) ->
    Ptail = lists:map(fun p4p/1, Tail),
    Path  = [ [$M, 32, coord(X0), 32, coord(Y0)] | Ptail ],
    {path, [{d, lists:flatten(Path)} | Attr], []}.
+
+%%
+%% line(Point, Point) -> Element
+%%
+%% defines an ellipse based on center point and two radii. 
+-spec line(point(), point()) -> element().
+
+line({X1,Y1}, {X2, Y2}) ->
+   {line, [{x1, coord(X1)}, {y1, coord(Y1)}, {x2, coord(X2)}, {y2, coord(Y2)}], []}.
+
 
 %%
 %% text(Point, Text) -> Element
