@@ -25,7 +25,7 @@
 %% containers
 -export([g/0, g/1]).
 %% shapes
--export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2, polyline/1, polyline/2]).
+-export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2, polyline/1, polyline/2, line/2, line/3]).
 %% clipping
 -export([clip_path/1, clip_path/2]).
 %% transform
@@ -274,6 +274,20 @@ polyline(PList, Attr) ->
                            end, PList),
     {polyline, [{points, Points} | Attr], []}.
         
+%%
+%% line(Point, Point) -> Element
+%%
+%% defines a line between to points. 
+-spec line(point(), point()) -> element().
+
+line(P1, P2) ->
+    line(P1, P2, []).
+
+line({X1,Y1}, {X2, Y2}, Attr) ->
+   {line, [{x1, coord(X1)}, {y1, coord(Y1)}, {x2, coord(X2)}, {y2, coord(Y2)} | Attr], 
+    []}.
+
+
 %%
 %% text(Point, Text) -> Element
 %%
