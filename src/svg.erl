@@ -25,7 +25,7 @@
 %% containers
 -export([g/0, g/1]).
 %% shapes
--export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2, line/2, line/3]).
+-export([rect/1, rect/2, circle/1, circle/2, ellipse/2, path/1, path/2, text/3, text/2, span/1, span/2, polyline/1, polyline/2, line/2, line/3]).
 %% clipping
 -export([clip_path/1, clip_path/2]).
 %% transform
@@ -258,6 +258,22 @@ path([{X0, Y0} | Tail], Attr) ->
    Path  = [ [$M, 32, coord(X0), 32, coord(Y0)] | Ptail ],
    {path, [{d, lists:flatten(Path)} | Attr], []}.
 
+
+%% polyline(Points) -> element()
+%%    Points = [point()] list of points
+%%
+%% defines a polyline
+%-spec polyline([point()]) -> element().
+polyline(PList) ->
+    polyline(PList, []).
+
+polyline(PList, Attr) ->
+    AsciiSpace = 32,
+    Points     = lists:map(fun({X,Y}) ->
+                                   [coord(X), $,, coord(Y), AsciiSpace]
+                           end, PList),
+    {polyline, [{points, Points} | Attr], []}.
+        
 %%
 %% line(Point, Point) -> Element
 %%
