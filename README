@@ -46,13 +46,15 @@ features descriptions.
    * 'text' element
       - font styling
       - basic text draw at defined point
+   * 'defs' element 
+   * 'line' element
+   * 'polyline' element
 
 Feature backlog
 ===============
 
    The following features to be supported in following releases
 
-   * 'defs' element 
    * 'symbol' element
    * 'use' element  
    * styling
@@ -61,8 +63,6 @@ Feature backlog
    * 'path' element
       - quadratic Bezier curve
       - elliptical arc
-   * 'line' element
-   * 'polyline' element
    * 'text' element
       - list of coordinates to 'x', 'y' attributes
       - inner 'tspan' element
